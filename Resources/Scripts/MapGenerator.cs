@@ -42,15 +42,7 @@ public class MapGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        GenerateTileDeck();
-        RandomizeDeck();
-        GenerateMap();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        //ReshuffleMap();
     }
 
     void GenerateTileDeck()
@@ -177,7 +169,7 @@ public class MapGenerator : MonoBehaviour
         TileDeck = shuffled;
     }
 
-    void GenerateMap()
+    void GenerateRectangularMap()
     {
         Vector2 lastPosition = new Vector2(0.0f, 0.0f);
         int tileCount = 0;
@@ -204,11 +196,21 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    void GenerateObscureMap()
+    {
+
+    }
+
     public void ReshuffleMap()
     {
         TileDeck = new List<GameObject>();
         GenerateTileDeck();
         RandomizeDeck();
-        GenerateMap();
+        GenerateRectangularMap();
+    }
+
+    public List<GameObject> GetTileDeck()
+    {
+        return TileDeck;
     }
 }
