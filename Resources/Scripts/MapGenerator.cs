@@ -215,8 +215,18 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+
     void GenerateObscureMap()
     {
+        if(TileDeck.Count != 0)
+        {
+            foreach(GameObject tile in TileDeck)
+            {
+                Destroy(tile);
+            }
+
+            TileDeck.Clear();
+        }
         GenerateTileDeck();
         RandomizeDeck();
 
@@ -226,7 +236,7 @@ public class MapGenerator : MonoBehaviour
         AssignSlots();
     }
 
-    int placedTiles = 0;
+    bool allPlaced = true;
 
     public void AssignSlots()
     {
@@ -243,7 +253,7 @@ public class MapGenerator : MonoBehaviour
                 if (ObscureMap[(int)slot.x, (int)slot.y] == null)
                 {
                     //Decide whether tile is placed
-                    int rand = Random.Range(0, 5);
+                    int rand = Random.Range(0, 10);
                     if (rand == 1)
                     {
                         //calculate position
@@ -254,39 +264,47 @@ public class MapGenerator : MonoBehaviour
                         tileScript.SetSlot(slot);
                         tileScript.Placed = true;
                         ObscureMap[(int)slot.x, (int)slot.y] = tile;
-
-                        placedTiles++;
                     }
                 }
                 else
                 {
                     List<Vector2> available = CheckForNeighbors(slot);
 
-                    foreach (Vector2 availableSlot in available)
+                    if (available.Count > 0)
                     {
-                        //Decide whether tile is placed
-                        int rand = Random.Range(0, 4);
-                        if (rand == 1)
-                        {
-                            //calculate position
-                            Vector2 vector = new Vector2(XOFFSET * slot.x, (slot.x % 2 != 0) ? (YOFFSET * slot.y) + YOFFSET_ADJUST : (YOFFSET * slot.y));
+                        //pick random available slot
+                        int rand = Random.Range(0, available.Count);
+                        Vector2 slotToUse = available[rand];
 
-                            //place the tile
-                            tileScript.UpdatePosition(vector);
-                            tileScript.SetSlot(slot);
-                            tileScript.Placed = true; 
-                            ObscureMap[(int)slot.x, (int)slot.y] = tile;
+                        Vector2 vector = new Vector2(XOFFSET * slotToUse.x, (slotToUse.x % 2 != 0) ? (YOFFSET * slotToUse.y) + YOFFSET_ADJUST : (YOFFSET * slotToUse.y));
 
-                            placedTiles++;
-                        }
+                        //place the tile
+                        tileScript.UpdatePosition(vector);
+                        tileScript.SetSlot(slotToUse);
+                        tileScript.Placed = true;
+                        ObscureMap[(int)slotToUse.x, (int)slotToUse.y] = tile;
+                        //}
+                        break;
                     }
                 }
             }
-
         }
 
-        if (placedTiles != NUMBER_OF_TOTAL_TILES)
+        foreach(GameObject tile in TileDeck)
+        {
+            if (!tile.GetComponent<Tile>().Placed) 
+            {
+                allPlaced = false;
+                break;
+            }
+
+            allPlaced = true;
+        }
+
+        if (!allPlaced)
+        {
             AssignSlots();
+        }
     }
 
     private List<Vector2> CheckForNeighbors(Vector2 slot)
@@ -299,9 +317,9 @@ public class MapGenerator : MonoBehaviour
             int adjustedY = (int) (slot.y + check.y);
 
             if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1 ))
-                if (ObscureMap[adjustedX, adjustedY] != null)
+                if (ObscureMap[adjustedX, adjustedY] == null)
                 {
-                    Debug.Log($"Checking: { adjustedX } , { adjustedY }");
+                    //Debug.Log($"Checking: { adjustedX } , { adjustedY }");
                     available.Add(new Vector2(adjustedX, adjustedY));
                 }
         }
@@ -311,10 +329,11 @@ public class MapGenerator : MonoBehaviour
 
     public void ReshuffleMap()
     {
-        TileDeck = new List<GameObject>();
-        GenerateTileDeck();
-        RandomizeDeck();
-        GenerateRectangularMap();
+        //TileDeck = new List<GameObject>();
+        //GenerateTileDeck();
+        //RandomizeDeck();
+        //GenerateRectangularMap();
+        GenerateObscureMap();
     }
 
     public List<GameObject> GetTileDeck()
