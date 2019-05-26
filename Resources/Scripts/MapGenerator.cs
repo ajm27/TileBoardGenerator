@@ -8,6 +8,11 @@ public class MapGenerator : MonoBehaviour
     public List<GameObject> TileDeck = new List<GameObject>();
     public GameObject[,] ObscureMap;
 
+    [Range(2, 50)]
+    public int NewPlaceChange = 2;
+    [Range(1, 200)]
+    public int AdditionalSpaces = 1;
+
     public GameObject FoodTile;
     public GameObject WoodTile;
     public GameObject StoneTile;
@@ -230,7 +235,7 @@ public class MapGenerator : MonoBehaviour
         GenerateTileDeck();
         RandomizeDeck();
 
-        mapsize = (int) Mathf.Sqrt(NUMBER_OF_TOTAL_TILES) + 2;
+        mapsize = (int) Mathf.Sqrt(NUMBER_OF_TOTAL_TILES) + AdditionalSpaces;
         ObscureMap = new GameObject[mapsize, mapsize];
 
         AssignSlots();
@@ -253,7 +258,7 @@ public class MapGenerator : MonoBehaviour
                 if (ObscureMap[(int)slot.x, (int)slot.y] == null)
                 {
                     //Decide whether tile is placed
-                    int rand = Random.Range(0, 10);
+                    int rand = Random.Range(0, NewPlaceChange);
                     if (rand == 1)
                     {
                         //calculate position

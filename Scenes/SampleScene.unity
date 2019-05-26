@@ -410,6 +410,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TileDeck: []
+  NewPlaceChange: 2
+  AdditionalSpaces: 1
   FoodTile: {fileID: 838176283559175047, guid: 1fa67ff251f97f040808194125201538, type: 3}
   WoodTile: {fileID: 9085869586534895707, guid: 476889506a9b07a4bb002f9cf8060df1,
     type: 3}
@@ -473,7 +475,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 7
+  orthographic size: 15
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
