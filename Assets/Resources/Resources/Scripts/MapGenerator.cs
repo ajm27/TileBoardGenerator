@@ -6,7 +6,7 @@ using UnityEngine;
 public class MapGenerator : MonoBehaviour
 {
     public List<GameObject> TileDeck = new List<GameObject>();
-    public GameObject[,] ObscureMap;
+    public GameObject[,] ObscureMap, ContinentalMap;
 
     [Range(2, 50)]
     public int NewPlaceChange = 2;
@@ -27,32 +27,37 @@ public class MapGenerator : MonoBehaviour
     public GameObject MountainTile;
 
     // Tile Counts
-    public int NUMBER_OF_FOOD            = 18;
-    public int NUMBER_OF_WOOD            = 18;
-    public int NUMBER_OF_STONE           = 18;
-    public int NUMBER_OF_METAL           = 17;
-    public int NUMBER_OF_GOLD            = 17;
-    public int NUMBER_OF_FOOD_WOOD       = 11;
-    public int NUMBER_OF_WOOD_STONE      = 11;
-    public int NUMBER_OF_FOOD_STONE      = 11;
-    public int NUMBER_OF_METAL_GOLD      = 10;
+    public int NUMBER_OF_FOOD = 18;
+    public int NUMBER_OF_WOOD = 18;
+    public int NUMBER_OF_STONE = 18;
+    public int NUMBER_OF_METAL = 17;
+    public int NUMBER_OF_GOLD = 17;
+    public int NUMBER_OF_FOOD_WOOD = 11;
+    public int NUMBER_OF_WOOD_STONE = 11;
+    public int NUMBER_OF_FOOD_STONE = 11;
+    public int NUMBER_OF_METAL_GOLD = 10;
     public int NUMBER_OF_FOOD_WOOD_STONE = 6;
-    public int NUMBER_OF_BLANK           = 25;
-    public int NUMBER_OF_MOUNTAIN        = 15;
+    public int NUMBER_OF_BLANK = 25;
+    public int NUMBER_OF_MOUNTAIN = 15;
     public int NUMBER_OF_TOTAL_TILES;
 
     float ColumnOffset = -0.800f;
-    int[] RowCounts    = { 9, 10, 9, 8, 9, 10, 11, 10, 9, 8, 9, 10, 11, 10, 9, 8, 9, 10, 9 };
+    int[] RowCounts = { 9, 10, 9, 8, 9, 10, 11, 10, 9, 8, 9, 10, 11, 10, 9, 8, 9, 10, 9 };
     float[] RowOffsets = { 0.0f, 0.4f, 0.0f, -0.4f, 0.0f, 0.4f, 0.8f, 0.4f, 0.0f, -0.4f, 0.0f, 0.4f, 0.8f, 0.4f, 0.0f, -0.4f, 0.0f, 0.4f, 0.0f };
 
+    bool allPlaced = true;
     int mapsize = 0;
 
-    //Offset Constants
-    float XOFFSET         =  0.675f;
-    float YOFFSET         = -0.784f;
-    float YOFFSET_ADJUST  = -0.393f;
+    // Offset Constants
+    float XOFFSET = 0.675f;
+    float YOFFSET = -0.784f;
+    float YOFFSET_ADJUST = -0.393f;
 
-    List<Vector2> toCheck = new List<Vector2>()
+    // Continental Map Variables
+    const int CONTINENTALMAPX = 150;
+    const int CONTINENTALMAPY = 100;
+
+    List<Vector2> Tier1_Check = new List<Vector2>()
     {
         new Vector2(-1, 0), // Top-Left
         new Vector2( 0,-1), // Top
@@ -62,18 +67,57 @@ public class MapGenerator : MonoBehaviour
         new Vector2( 1, 1)  // Bottom-Right
     };
 
+    List<Vector2> Tier2_Check = new List<Vector2>()
+    {
+        new Vector2( 0, -2),
+        new Vector2( 1, -2),
+        new Vector2( 2, -1),
+        new Vector2( 2,  0),
+        new Vector2( 2,  1),
+        new Vector2( 1,  1),
+        new Vector2( 0,  2),
+        new Vector2(-1,  1),
+        new Vector2(-2,  1),
+        new Vector2(-2,  0),
+        new Vector2(-2, -1),
+        new Vector2(-1, -2)
+    };
+
+    List<Vector2> Tier3_Check = new List<Vector2>()
+    {
+        new Vector2( 0, -3),
+        new Vector2( 1, -3),
+        new Vector2( 2, -2),
+        new Vector2( 3, -2),
+        new Vector2( 3, -1),
+        new Vector2( 3,  0),
+        new Vector2( 3,  1),
+        new Vector2( 2,  2),
+        new Vector2( 1,  3),
+        new Vector2( 0,  3),
+        new Vector2(-1,  3),
+        new Vector2(-2,  2),
+        new Vector2(-3,  1),
+        new Vector2(-3,  0),
+        new Vector2(-3, -1),
+        new Vector2(-3, -2),
+        new Vector2(-2, -2),
+        new Vector2(-1, -3)
+    };
+
     // Start is called before the first frame update
     void Start()
     {
         //ReshuffleMap();
-        GenerateObscureMap();
+        //GenerateObscureMap();
+        GenerateContinentalMap(3);
     }
 
     void GenerateTileDeck()
     {
         int totalTiles = 0;
 
-        for (int i = 0; i < NUMBER_OF_FOOD; i ++)
+        for (int i = 0; i < NUMBER_OF_FOOD; i++)
         {
             GameObject tile = Instantiate(FoodTile);
             tile.GetComponent<Tile>().SetType(TILETYPE.FOOD);
@@ -223,9 +267,9 @@ public class MapGenerator : MonoBehaviour
 
     void GenerateObscureMap()
     {
-        if(TileDeck.Count != 0)
+        if (TileDeck.Count != 0)
         {
-            foreach(GameObject tile in TileDeck)
+            foreach (GameObject tile in TileDeck)
             {
                 Destroy(tile);
             }
@@ -235,13 +279,48 @@ public class MapGenerator : MonoBehaviour
         GenerateTileDeck();
         RandomizeDeck();
 
-        mapsize = (int) Mathf.Sqrt(NUMBER_OF_TOTAL_TILES) + AdditionalSpaces;
+        mapsize = (int)Mathf.Sqrt(NUMBER_OF_TOTAL_TILES) + AdditionalSpaces;
         ObscureMap = new GameObject[mapsize, mapsize];
 
         AssignSlots();
     }
 
-    bool allPlaced = true;
+    void GenerateContinentalMap(int numberOfContinents)
+    {
+        ContinentalMap = new GameObject[CONTINENTALMAPX, CONTINENTALMAPY];
+
+        GenerateTileDeck();
+        RandomizeDeck();
+
+        GameObject[] seeds = new GameObject[numberOfContinents];
+        for (int i = 0; i < numberOfContinents; i++)
+            seeds[i] = TileDeck[i];
+
+        PlaceContinentSeeds(seeds);
+    }
+
+    void PlaceContinentSeeds(GameObject[] seeds)
+    {
+        List<GameObject> _seeds = new List<GameObject>();
+
+        foreach (GameObject seed in seeds)
+        {
+            Tile seedScript = seed.GetComponent<Tile>();
+
+            if (seedScript.Placed != true)
+                _seeds.Add(seed);
+
+        }
+
+        foreach (GameObject seed in _seeds)
+        {
+            Tile seedScript = seed.GetComponent<Tile>();
+
+            Vector2 slot = new Vector2((int)Random.Range(0, CONTINENTALMAPX), (int)Random.Range(0, CONTINENTALMAPY));
+
+        }
+    }
+
 
     public void AssignSlots()
     {
@@ -273,7 +352,7 @@ public class MapGenerator : MonoBehaviour
                 }
                 else
                 {
-                    List<Vector2> available = CheckForNeighbors(slot);
+                    List<Vector2> available = FindFreeNeighborSlots(slot);
 
                     if (available.Count > 0)
                     {
@@ -295,9 +374,9 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
-        foreach(GameObject tile in TileDeck)
+        foreach (GameObject tile in TileDeck)
         {
-            if (!tile.GetComponent<Tile>().Placed) 
+            if (!tile.GetComponent<Tile>().Placed)
             {
                 allPlaced = false;
                 break;
@@ -312,21 +391,119 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    private List<Vector2> CheckForNeighbors(Vector2 slot)
+    private bool CheckForNeighbors(Vector2 slot, int tier)
+    {
+        if (tier == 1)
+        {
+            foreach (Vector2 check in Tier1_Check)
+            {
+                int adjustedX = (int)(slot.x + check.x);
+                int adjustedY = (int)(slot.y + check.y);
+
+                if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1))
+                {
+                    if (ContinentalMap[adjustedX, adjustedY] != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        else if (tier == 2)
+        {
+            foreach (Vector2 check in Tier1_Check)
+            {
+                int adjustedX = (int)(slot.x + check.x);
+                int adjustedY = (int)(slot.y + check.y);
+
+                if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1))
+                {
+                    if (ObscureMap[adjustedX, adjustedY] != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            foreach (Vector2 check in Tier2_Check)
+            {
+                int adjustedX = (int)(slot.x + check.x);
+                int adjustedY = (int)(slot.y + check.y);
+
+                if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1))
+                {
+                    if (ContinentalMap[adjustedX, adjustedY] != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        else if (tier == 3)
+        {
+            foreach (Vector2 check in Tier1_Check)
+            {
+                int adjustedX = (int)(slot.x + check.x);
+                int adjustedY = (int)(slot.y + check.y);
+
+                if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1))
+                {
+                    if (ObscureMap[adjustedX, adjustedY] != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            foreach (Vector2 check in Tier2_Check)
+            {
+                int adjustedX = (int)(slot.x + check.x);
+                int adjustedY = (int)(slot.y + check.y);
+
+                if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1))
+                {
+                    if (ContinentalMap[adjustedX, adjustedY] != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            foreach (Vector2 check in Tier3_Check)
+            {
+                int adjustedX = (int)(slot.x + check.x);
+                int adjustedY = (int)(slot.y + check.y);
+
+                if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1))
+                {
+                    if (ContinentalMap[adjustedX, adjustedY] != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private List<Vector2> FindFreeNeighborSlots(Vector2 slot)
     {
         List<Vector2> available = new List<Vector2>();
 
-        foreach(Vector2 check in toCheck)
+        foreach (Vector2 check in Tier1_Check)
         {
-            int adjustedX = (int) (slot.x + check.x);
-            int adjustedY = (int) (slot.y + check.y);
+            int adjustedX = (int)(slot.x + check.x);
+            int adjustedY = (int)(slot.y + check.y);
 
-            if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1 ))
+            if (!(adjustedX < 0 || adjustedX > mapsize - 1 || adjustedY < 0 || adjustedY > mapsize - 1))
+            {
                 if (ObscureMap[adjustedX, adjustedY] == null)
                 {
-                    //Debug.Log($"Checking: { adjustedX } , { adjustedY }");
                     available.Add(new Vector2(adjustedX, adjustedY));
                 }
+            }
         }
 
         return available;
@@ -339,10 +516,5 @@ public class MapGenerator : MonoBehaviour
         //RandomizeDeck();
         //GenerateRectangularMap();
         GenerateObscureMap();
-    }
-
-    public List<GameObject> GetTileDeck()
-    {
-        return TileDeck;
     }
 }
