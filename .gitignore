@@ -12,6 +12,7 @@
 
 # Never ignore Asset meta data
 ![Aa]ssets/**/*.meta
+![Pp]rojectSettings/*.asset
 
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # [Aa]ssets/AssetStoreTools*
@@ -30,7 +31,6 @@ ExportedObj/
 .consulo/
 *.csproj
 *.unityproj
-*.sln
 *.suo
 *.tmp
 *.user
