@@ -54,8 +54,9 @@ public class MapGenerator : MonoBehaviour
     //float YOFFSET_ADJUST = -0.393f;
 
     // Continental Map Variables
-    const int CONTINENTALMAPX = 150;
-    const int CONTINENTALMAPY = 100;
+    const int CONTINENTALMAPX = 50;
+    const int CONTINENTALMAPY = 35;
+    GameObject[] seeds;
 
     List<Vector2> Tier1_Check = new List<Vector2>()
     {
@@ -110,7 +111,7 @@ public class MapGenerator : MonoBehaviour
     {
         //ReshuffleMap();
         //GenerateObscureMap();
-        GenerateContinentalMap(3);
+        GenerateContinentalMap(8);
     }
 
     void GenerateTileDeck()
@@ -292,7 +293,7 @@ public class MapGenerator : MonoBehaviour
         GenerateTileDeck();
         RandomizeDeck();
 
-        GameObject[] seeds = new GameObject[numberOfContinents];
+        seeds = new GameObject[numberOfContinents];
         for (int i = 0; i < numberOfContinents; i++)
             seeds[i] = TileDeck[i];
 
@@ -303,29 +304,45 @@ public class MapGenerator : MonoBehaviour
     {
         List<GameObject> _seeds = new List<GameObject>();
 
+        //foreach (GameObject seed in seeds)
+        //{
+        //    Tile seedScript = seed.GetComponent<Tile>();
+
+        //    if (seedScript.GetPlaced() != true)
+        //        _seeds.Add(seed);
+
+        //}
+
         foreach (GameObject seed in seeds)
         {
             Tile seedScript = seed.GetComponent<Tile>();
 
             if (seedScript.GetPlaced() != true)
-                _seeds.Add(seed);
+            {
+                Vector2 slot = new Vector2((int)Random.Range(0, CONTINENTALMAPX), (int)Random.Range(0, CONTINENTALMAPY));
 
+                if (!CheckForNeighbors(slot, 3, false))
+                {
+                    seedScript.UpdatePosition(slot);
+                    seedScript.SetSlot(slot);
+                    seedScript.SetPlaced(true);
+                    ContinentalMap[(int)slot.x, (int)slot.y] = seed;
+                }
+            }
         }
 
-        foreach (GameObject seed in _seeds)
+        foreach(GameObject seed in seeds)
         {
             Tile seedScript = seed.GetComponent<Tile>();
 
-            Vector2 slot = new Vector2((int)Random.Range(0, CONTINENTALMAPX), (int)Random.Range(0, CONTINENTALMAPY));
-
-            if(!CheckForNeighbors(slot, 3, false))
+            if (!seedScript.GetPlaced())
             {
-                seedScript.UpdatePosition(slot);
-                seedScript.SetSlot(slot);
-                seedScript.SetPlaced(true);
-                ContinentalMap[ (int) slot.x, (int) slot.y ] = seed;
+                allPlaced = false;
             }
         }
+
+        if (!allPlaced)
+            PlaceContinentSeeds(seeds);
     }
 
 
@@ -395,6 +412,24 @@ public class MapGenerator : MonoBehaviour
         if (!allPlaced)
         {
             AssignSlots();
+        }
+    }
+
+    public void AssignSlots(int numberOfContinents)
+    {
+        int currentContinent = 0;
+
+        foreach(GameObject tile in TileDeck)
+        {
+            Tile tileScript = tile.GetComponent<Tile>();
+
+            
+
+            if (tileScript.GetPlaced() != false)
+            {
+                List<Vector2> available = FindFreeNeighborSlots((Vector2) seeds[currentContinent].GetComponent<Tile>().GetSlot());
+
+            }
         }
     }
 
