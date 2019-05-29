@@ -49,9 +49,9 @@ public class MapGenerator : MonoBehaviour
     int mapsize = 0;
 
     // Offset Constants
-    float XOFFSET = 0.675f;
-    float YOFFSET = -0.784f;
-    float YOFFSET_ADJUST = -0.393f;
+    //float XOFFSET = 0.675f;
+    //float YOFFSET = -0.784f;
+    //float YOFFSET_ADJUST = -0.393f;
 
     // Continental Map Variables
     const int CONTINENTALMAPX = 150;
@@ -307,7 +307,7 @@ public class MapGenerator : MonoBehaviour
         {
             Tile seedScript = seed.GetComponent<Tile>();
 
-            if (seedScript.Placed != true)
+            if (seedScript.GetPlaced() != true)
                 _seeds.Add(seed);
 
         }
@@ -318,6 +318,13 @@ public class MapGenerator : MonoBehaviour
 
             Vector2 slot = new Vector2((int)Random.Range(0, CONTINENTALMAPX), (int)Random.Range(0, CONTINENTALMAPY));
 
+            if(!CheckForNeighbors(slot, 3, false))
+            {
+                seedScript.UpdatePosition(slot);
+                seedScript.SetSlot(slot);
+                seedScript.SetPlaced(true);
+                ContinentalMap[ (int) slot.x, (int) slot.y ] = seed;
+            }
         }
     }
 
@@ -328,7 +335,7 @@ public class MapGenerator : MonoBehaviour
         {
             Tile tileScript = tile.GetComponent<Tile>();
 
-            if (tileScript.Placed == false)
+            if (tileScript.GetPlaced() == false)
             {
                 //Get random slot
                 Vector2 slot = new Vector2(Random.Range(0, mapsize), Random.Range(0, mapsize));
@@ -341,12 +348,12 @@ public class MapGenerator : MonoBehaviour
                     if (rand == 1)
                     {
                         //calculate position
-                        Vector2 vector = new Vector2(XOFFSET * slot.x, (slot.x % 2 != 0) ? (YOFFSET * slot.y) + YOFFSET_ADJUST : (YOFFSET * slot.y));
+                        //Vector2 vector = new Vector2(XOFFSET * slot.x, (slot.x % 2 != 0) ? (YOFFSET * slot.y) + YOFFSET_ADJUST : (YOFFSET * slot.y));
 
                         //place the tile
-                        tileScript.UpdatePosition(vector);
+                        tileScript.UpdatePosition(slot);
                         tileScript.SetSlot(slot);
-                        tileScript.Placed = true;
+                        tileScript.SetPlaced(true);
                         ObscureMap[(int)slot.x, (int)slot.y] = tile;
                     }
                 }
@@ -360,12 +367,12 @@ public class MapGenerator : MonoBehaviour
                         int rand = Random.Range(0, available.Count);
                         Vector2 slotToUse = available[rand];
 
-                        Vector2 vector = new Vector2(XOFFSET * slotToUse.x, (slotToUse.x % 2 != 0) ? (YOFFSET * slotToUse.y) + YOFFSET_ADJUST : (YOFFSET * slotToUse.y));
+                        //Vector2 vector = new Vector2(XOFFSET * slotToUse.x, (slotToUse.x % 2 != 0) ? (YOFFSET * slotToUse.y) + YOFFSET_ADJUST : (YOFFSET * slotToUse.y));
 
                         //place the tile
-                        tileScript.UpdatePosition(vector);
+                        tileScript.UpdatePosition(slotToUse);
                         tileScript.SetSlot(slotToUse);
-                        tileScript.Placed = true;
+                        tileScript.SetPlaced(true);
                         ObscureMap[(int)slotToUse.x, (int)slotToUse.y] = tile;
                         //}
                         break;
@@ -376,7 +383,7 @@ public class MapGenerator : MonoBehaviour
 
         foreach (GameObject tile in TileDeck)
         {
-            if (!tile.GetComponent<Tile>().Placed)
+            if (!tile.GetComponent<Tile>().GetPlaced())
             {
                 allPlaced = false;
                 break;
@@ -391,9 +398,9 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    private bool CheckForNeighbors(Vector2 slot, int tier)
+    private bool CheckForNeighbors(Vector2 slot, int tier, bool only)
     {
-        if (tier == 1)
+        if (!only || tier == 1)
         {
             foreach (Vector2 check in Tier1_Check)
             {
@@ -409,7 +416,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
-        else if (tier == 2)
+        else if (!only || tier == 2)
         {
             foreach (Vector2 check in Tier1_Check)
             {
@@ -440,7 +447,7 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
-        else if (tier == 3)
+        else if (!only || tier == 3)
         {
             foreach (Vector2 check in Tier1_Check)
             {
